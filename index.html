@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lopes Barbearia</title>
+    <title>Bradock Barbearia</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
@@ -176,7 +176,7 @@
     <header>
         <div class="logo-area">
             <img src="https://media.istockphoto.com/id/1446474893/pt/vetorial/barbershop-logo-vector-salon-logo.jpg?s=612x612&w=0&k=20&c=Ctt2bw9V05sMx0iOmlhbgXiGQxRgsBxxxZ3k7UWj7YA=" alt="Logo">
-            <h1>LOPES BARBEARIA</h1>
+            <h1>BRADOCK BARBEARIA</h1>
         </div>
         <div class="nav-buttons">
             <button class="nav-btn active" id="btn-nav-agendamento" onclick="showSection('agendamento')">Agendar</button>
@@ -314,7 +314,7 @@
         <a href="https://maps.google.com" target="_blank" class="map-link">
             🗺️ VER NO GOOGLE MAPS
         </a>
-        <p style="margin-top: 20px; opacity: 0.5;">© 2025 LOPES BARBEARIA</p>
+        <p style="margin-top: 20px; opacity: 0.5;">© 2025 BRADOCK BARBEARIA</p>
     </footer>
 
     <script type="module">
@@ -683,7 +683,7 @@
                     timestamp: new Date()
                 });
 
-                const msg = encodeURIComponent(`💈 *LOPES BARBEARIA*\n\n👤 Cliente: ${nomeCliente}\n✂️ Serviço: ${servicoFinal}\n📅 Data: ${state.data.split('-').reverse().join('/')}\n⏰ Hora: ${state.hora}h\n💈 Barbeiro: ${state.barbeiro}`);
+                const msg = encodeURIComponent(`💈 *BRADOCK BARBEARIA*\n\n👤 Cliente: ${nomeCliente}\n✂️ Serviço: ${servicoFinal}\n📅 Data: ${state.data.split('-').reverse().join('/')}\n⏰ Hora: ${state.hora}h\n💈 Barbeiro: ${state.barbeiro}`);
                 window.open(`https://api.whatsapp.com/send?phone=5528999082741&text=${msg}`);
                 location.reload();
             } catch (e) { 
@@ -717,7 +717,7 @@
                     data: dt.data,
                     hora: dt.hora,
                     cliente: dt.cliente
-                }).replace(/"/g, '&quot;');
+                }).replace(/"/g, '"');
 
                 lista.innerHTML += `<div style="border-bottom: 1px solid #222; padding: 10px 0;">
                     <b>${dt.servico}</b><br>${dt.data.split('-').reverse().join('/')} às ${dt.hora}h

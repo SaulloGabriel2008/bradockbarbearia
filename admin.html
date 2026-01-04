@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Lopes Barbearia</title>
+    <title>Admin | Bradock Barbearia</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -140,7 +140,7 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="color: var(--primary); text-align: center; margin-bottom: 2rem;">LOPES ADMIN</h2>
+            <h2 style="color: var(--primary); text-align: center; margin-bottom: 2rem;">BRADOCK ADMIN</h2>
             <div style="margin-bottom: 1rem;"><label>Email</label><input type="email" id="login-email" autocomplete="email"></div>
             <div style="margin-bottom: 1.5rem;"><label>Senha</label><input type="password" id="login-password" autocomplete="current-password"></div>
             <button class="btn-action" id="btn-login" style="width: 100%;">ENTRAR</button>
@@ -150,7 +150,7 @@
 
     <div id="admin-panel">
         <aside>
-            <div class="nav-brand">Lopes Barbearia</div>
+            <div class="nav-brand">Bradock Barbearia</div>
             <nav class="nav-menu">
                 <div class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</div>
                 <div class="nav-item" id="nav-agendamentos" onclick="switchTab('agendamentos')"><i data-lucide="calendar"></i> Agenda</div>
@@ -502,7 +502,7 @@
             const phone = clean.startsWith("55") ? clean : "55" + clean;
             const msg = encodeURIComponent(
                 `Olá, ${nome}! 👋\n\n` +
-                `Sentimos sua falta na *Lopes Barbearia*! ✂️\n` +
+                `Sentimos sua falta na *Bradock Barbearia*! ✂️\n` +
                 `Já fazem ${dias} dias desde sua última visita.\n\n` +
                 `Que tal agendar um horário pra dar aquele tapa no visual? 😉`
             );
@@ -843,7 +843,7 @@
                     const cleanPhone = telefone.replace(/\D/g, "");
                     const fullPhone = cleanPhone.startsWith("55") ? cleanPhone : "55" + cleanPhone;
                     const displayName = agend.nome || agend.cliente || 'cliente';
-                    const msg = encodeURIComponent(`Olá, ${displayName}! 👋\n\nEstou passando para confirmar o seu agendamento na *Lopes Barbearia*.\n\n📅 Data: ${agend.data.split('-').reverse().join('/')}\n⏰ Hora: ${agend.hora}h\n✂️ Serviço: ${agend.servico}\n\nPodemos confirmar? 😉`);
+                    const msg = encodeURIComponent(`Olá, ${displayName}! 👋\n\nEstou passando para confirmar o seu agendamento na *Bradock Barbearia*.\n\n📅 Data: ${agend.data.split('-').reverse().join('/')}\n⏰ Hora: ${agend.hora}h\n✂️ Serviço: ${agend.servico}\n\nPodemos confirmar? 😉`);
                     window.open(`https://api.whatsapp.com/send?phone=${fullPhone}&text=${msg}`);
                 };
             } else {
