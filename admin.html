@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Lopes Barbearia</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --primary: #1e90ff; 
+            --primary-hover: #1c86ee;
+            --bg-dark: #0a0a0a;
+            --bg-card: #141414;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --border: #222222;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warn: #f59e0b;
+            --accent: #3b82f6;
+            --whatsapp: #25d366;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); line-height: 1.5; overflow-x: hidden; }
+
+        /* Login */
+        #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%); }
+        .login-card { background: var(--bg-card); padding: 2.5rem; border-radius: 1rem; width: 100%; max-width: 400px; border: 1px solid var(--border); }
+
+        /* Layout */
+        #admin-panel { display: none; grid-template-columns: 260px 1fr; min-height: 100vh; }
+        aside { background: var(--bg-card); border-right: 1px solid var(--border); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 0; height: 100vh; }
+        .nav-brand { color: var(--primary); font-weight: 900; font-size: 1.2rem; text-align: center; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase; }
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 0.5rem; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+        .nav-item:hover, .nav-item.active { background: #1a1a1a; color: var(--primary); }
+
+        main { padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-top: 0.5rem; }
+
+        /* Agenda */
+        .calendar-wrapper { display: grid; grid-template-columns: 1fr 400px; gap: 1.5rem; align-items: start; }
+        @media (max-width: 900px) { .calendar-wrapper { grid-template-columns: 1fr; } }
+        
+        .calendar-card { background: var(--bg-card); border-radius: 0.75rem; border: 1px solid var(--border); overflow: hidden; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; background: #0d0d0d; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); }
+        .calendar-day { background: var(--bg-card); min-height: 90px; padding: 0.5rem; cursor: pointer; transition: 0.2s; position: relative; }
+        .calendar-day:hover { background: #1a1a1a; }
+        .calendar-day.selected { border: 2px solid var(--primary); z-index: 10; }
+        .calendar-day.closed { opacity: 0.4; background: #000; }
+        .day-number { font-weight: bold; font-size: 0.9rem; margin-bottom: 4px; }
+        
+        .slots-container { background: var(--bg-card); border-radius: 0.75rem; border: 1px solid var(--border); padding: 1.5rem; }
+        .slots-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 1rem; }
+        
+        .slot-btn { 
+            padding: 12px; border: 1px solid var(--border); background: #0d0d0d; color: white; border-radius: 8px; 
+            cursor: pointer; text-align: center; font-size: 0.85rem; transition: 0.2s;
+            position: relative;
+        }
+        .slot-btn.occupied { border-color: var(--primary); color: var(--primary); font-weight: bold; }
+        .slot-btn.blocked { background: #2a1010; color: var(--danger); border-color: var(--danger); opacity: 0.7; }
+        .slot-btn.part-of-long { border-style: dashed; opacity: 0.9; }
+        
+        .slot-btn.active-editing {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Form Estilizado */
+        .admin-section { background: var(--bg-card); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border); margin-bottom: 2rem; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; align-items: end; }
+        input, select { background: #000; border: 1px solid var(--border); padding: 0.8rem; color: white; border-radius: 0.5rem; width: 100%; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+        label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; display: block; }
+        
+        .btn-action { background: var(--primary); color: white; border: none; padding: 0.8rem 1.2rem; border-radius: 0.5rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-action:hover { background: var(--primary-hover); opacity: 0.9; }
+
+        .btn-whatsapp { background: var(--whatsapp); color: white; border: none; width: 42px; height: 42px; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-whatsapp:hover { opacity: 0.8; }
+
+        /* Tabelas */
+        .table-wrapper { width: 100%; overflow-x: auto; background: var(--bg-card); border-radius: 0.75rem; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 1.2rem; background: #0d0d0d; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 1.2rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        tr:last-child td { border: none; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .charts-container { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+        @media (max-width: 900px) { .charts-container { grid-template-columns: 1fr; } }
+        
+        .chart-box {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Toggle Autismo e Cortesia */
+        .autismo-toggle { display: flex; gap: 8px; margin-top: 5px; }
+        .toggle-btn { 
+            flex: 1; padding: 10px; border: 1px solid var(--border); background: #000; color: var(--text-muted); 
+            border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; text-align: center;
+        }
+        .toggle-btn.active-yes { background: var(--success); color: white; border-color: var(--success); }
+        .toggle-btn.active-no { background: var(--danger); color: white; border-color: var(--danger); }
+        .toggle-btn.active-primary { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Estilo Financeiro Toggle */
+        .finance-toggle { display: flex; margin-bottom: 1.5rem; background: var(--border); padding: 4px; border-radius: 0.75rem; width: fit-content; }
+        .finance-toggle button { background: none; border: none; padding: 0.6rem 1.5rem; color: var(--text-muted); border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .finance-toggle button.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+        /* Estilo Lançamento Rápido */
+        .quick-launch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .btn-quick { padding: 15px; border-radius: 10px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .btn-quick:active { transform: scale(0.95); }
+
+        /* Status Badge */
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .status-pago { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-pendente { background: rgba(245, 158, 11, 0.2); color: var(--warn); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h2 style="color: var(--primary); text-align: center; margin-bottom: 2rem;">LOPES ADMIN</h2>
+            <div style="margin-bottom: 1rem;"><label>Email</label><input type="email" id="login-email" autocomplete="email"></div>
+            <div style="margin-bottom: 1.5rem;"><label>Senha</label><input type="password" id="login-password" autocomplete="current-password"></div>
+            <button class="btn-action" id="btn-login" style="width: 100%;">ENTRAR</button>
+            <p id="login-error" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px; text-align: center; display: none;"></p>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <aside>
+            <div class="nav-brand">Lopes Barbearia</div>
+            <nav class="nav-menu">
+                <div class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+                <div class="nav-item" id="nav-agendamentos" onclick="switchTab('agendamentos')"><i data-lucide="calendar"></i> Agenda</div>
+                <div class="nav-item" id="nav-clientes" onclick="switchTab('clientes')"><i data-lucide="users"></i> Clientes</div>
+                <div class="nav-item" id="nav-financas" onclick="switchTab('finanças')"><i data-lucide="wallet"></i> Finanças</div>
+            </nav>
+            <button class="btn-action" onclick="logout()" style="margin-top: auto; background: var(--danger); color: white; border: none;"><i data-lucide="log-out"></i> SAIR</button>
+        </aside>
+
+        <main>
+            <h2 id="view-title" style="margin-bottom: 1.5rem;">Dashboard</h2>
+
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span style="color:var(--text-muted)">Receita Bruta</span>
+                        <div class="stat-value" id="dash-revenue" style="color: var(--primary)">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <span style="color:var(--text-muted)">Despesas</span>
+                        <div class="stat-value" id="dash-expense" style="color: var(--warn)">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <span style="color:var(--text-muted)">Comissão Barbeiro 2 (10%)</span>
+                        <div class="stat-value" id="dash-commission" style="color: var(--accent)">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <span style="color:var(--text-muted)">Ganhos Barbeiro 2 (líquido 90%)</span>
+                        <div class="stat-value" id="dash-b2-earnings" style="color: var(--primary)">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <span style="color:var(--text-muted)">Saldo (Líquido)</span>
+                        <div class="stat-value" id="dash-profit" style="color: var(--success)">R$ 0,00</div>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:12px;">
+                    <button id="period-month" class="btn-action" style="padding:6px 12px;">Mês</button>
+                    <button id="period-week" class="btn-action" style="padding:6px 12px;">Semana</button>
+                    <button id="period-year" class="btn-action" style="padding:6px 12px;">Ano</button>
+                </div>
+                <div class="charts-container">
+                    <div class="stat-card">
+                        <div class="chart-box">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="chart-box">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-agendamentos" class="tab-content">
+                <div class="calendar-wrapper">
+                    <div class="calendar-card">
+                        <div class="calendar-header">
+                            <button class="btn-action" style="padding: 5px 10px;" onclick="changeMonth(-1)"><i data-lucide="chevron-left"></i></button>
+                            <h3 id="calendar-month-year">...</h3>
+                            <button class="btn-action" style="padding: 5px 10px;" onclick="changeMonth(1)"><i data-lucide="chevron-right"></i></button>
+                            <div style="display:flex; align-items:center; gap:8px; margin-left:12px;">
+                                <label style="font-size:0.8rem; color:var(--text-muted);">Ver:</label>
+                                <select id="filterBarbeiro" style="background:#0d0d0d; border:1px solid var(--border); color:#fff; padding:6px; border-radius:6px;">
+                                    <option value="Todos">Todos</option>
+                                    <option value="Barbeiro 1">Barbeiro 1</option>
+                                    <option value="Barbeiro 2">Barbeiro 2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; background: #0d0d0d; padding: 10px 0; font-size: 0.7rem; color: var(--text-muted); font-weight: bold;">
+                            <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SAB</div>
+                        </div>
+                        <div class="calendar-grid" id="calendar-body"></div>
+                        
+                        <div style="padding: 1.5rem; background: #0d0d0d; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-action" style="background: var(--danger); color: white;" onclick="toggleDayStatus('closed')">FECHAR DIA</button>
+                            <button class="btn-action" style="background: var(--success); color: white;" onclick="toggleDayStatus('open')">ABRIR DIA EXTRA</button>
+                            <button class="btn-action" style="background: var(--primary); color: white;" onclick="addExtraSlot()">+ HORÁRIO EXTRA</button>
+                        </div>
+                    </div>
+
+                    <div class="slots-container">
+                        <h4 id="selected-date-label">Data</h4>
+                        <div class="slots-grid" id="slots-grid"></div>
+                        
+                        <div id="slot-editor" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h5 id="editor-title" style="color: var(--primary);">Horário</h5>
+                                <button id="btn-whatsapp-client" class="btn-whatsapp" title="Enviar Mensagem no WhatsApp" style="display: none;">
+                                    <i data-lucide="message-circle"></i>
+                                </button>
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <label>Barbeiro</label>
+                                    <select id="edit-barber">
+                                        <option value="Barbeiro 1">Barbeiro 1 (Dono)</option>
+                                        <option value="Barbeiro 2">Barbeiro 2 (10% Comissão)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Nome do Cliente</label>
+                                    <input type="text" id="edit-client" placeholder="Nome do Cliente">
+                                </div>
+                                <div>
+                                    <label>Telemóvel (Opcional)</label>
+                                    <input type="tel" id="edit-phone" placeholder="28999999999">
+                                </div>
+                                <div>
+                                    <label>Serviço</label>
+                                    <select id="edit-service">
+                                        <option value="Corte Masculino|40|1">Corte Masculino (R$ 40 - 40min)</option>
+                                        <option value="Barba Completa|40|1">Barba (R$ 40 - 40min)</option>
+                                        <option value="Combo Corte + Barba|75|2">Combo (R$ 75 - 80min)</option>
+                                        <option value="Corte Infantil|40|1">Corte Infantil (R$ 40 - 40min)</option>
+                                        <option value="Cortesia|0|1">Cortesia (R$ 0)</option>
+                                    </select>
+                                </div>
+                                <div id="autismo-container" style="display: none;">
+                                    <label>Autismo?</label>
+                                    <div class="autismo-toggle">
+                                        <button id="autismo-yes" class="toggle-btn" onclick="setAutismo(true)">✅</button>
+                                        <button id="autismo-no" class="toggle-btn" onclick="setAutismo(false)">⛔</button>
+                                    </div>
+                                </div>
+                                <div id="cortesia-slots-container" style="display: none;">
+                                    <label>Quantos horários para a Cortesia?</label>
+                                    <div class="autismo-toggle">
+                                        <button id="cortesia-1" class="toggle-btn" onclick="setCortesiaSlots(1)">1 Horário</button>
+                                        <button id="cortesia-2" class="toggle-btn" onclick="setCortesiaSlots(2)">2 Horários</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label>Observações (Atendimento especializado)</label>
+                                    <textarea id="edit-observations" placeholder="Preferências sensoriais, notas" style="width:100%; height:70px; margin-top:8px; padding:8px; background:#000; color:#fff; border:1px solid var(--border); border-radius:6px;"></textarea>
+                                </div>
+                                <div id="warning-double" style="display:none; color: var(--danger); font-size: 0.75rem; font-weight: bold;">
+                                    ⚠️ Este serviço requer 2 horários seguidos.
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <button class="btn-action" onclick="saveBooking()">SALVAR</button>
+                                    <button class="btn-action" style="background: #333; color: white;" onclick="toggleBlockSlot()">BLOQUEAR</button>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <button id="btn-complete-booking" style="background: var(--success); color: white; border: none; padding: 0.8rem; border-radius: 0.5rem; font-weight: 700; cursor: pointer; display: none;" onclick="completeBooking()">CONCLUIR ATENDIMENTO</button>
+                                    <button id="btn-cancel-booking" style="background: var(--danger); color: white; border: none; padding: 0.8rem; border-radius: 0.5rem; font-weight: 700; cursor: pointer; display: none;" onclick="cancelBooking()">CANCELAR AGENDAMENTO</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-clientes" class="tab-content">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Contato / Email</th>
+                                <th>Última Visita</th>
+                                <th>Total Gasto</th>
+                                <th style="cursor:pointer" onclick="toggleClientSort()">Dias sem ir ⬍</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-clients"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-finanças" class="tab-content">
+                <div class="finance-toggle">
+                    <button id="toggle-despesas" class="active" onclick="switchFinanceMode('despesas')">DESPESAS</button>
+                    <button id="toggle-entradas" onclick="switchFinanceMode('entradas')">ENTRADAS (PRODUTOS)</button>
+                </div>
+
+                <div class="admin-section" id="section-finance-form">
+                    <h4 id="finance-form-title" style="margin-bottom: 1rem;">Lançar Nova Despesa</h4>
+                    
+                    <div id="quick-products-container" style="display: none;">
+                        <div class="quick-launch-grid">
+                            <button class="btn-quick" style="background: #e67e22;" onclick="quickAdd('Cremes / Pomadas')"><i data-lucide="package"></i>CREME</button>
+                            <button class="btn-quick" style="background: #27ae60;" onclick="quickAdd('Chips / Snacks')"><i data-lucide="cookie"></i>CHIPS</button>
+                            <button class="btn-quick" style="background: #2980b9;" onclick="quickAdd('Refrigerantes')"><i data-lucide="cup-soda"></i>REFRI</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div id="col-desc"><label>Descrição</label><input type="text" id="exp-desc" placeholder="Ex: Energia"></div>
+                        <div><label>Valor (R$)</label><input type="number" id="exp-val" step="0.01"></div>
+                        <div><label>Data</label><input type="date" id="exp-date"></div>
+                        <div id="recurrence-container">
+                            <label>Recorrência</label>
+                            <select id="exp-recurrence">
+                                <option value="">Nenhuma</option>
+                                <option value="weekly">Semanal</option>
+                                <option value="monthly">Mensal</option>
+                                <option value="yearly">Anual</option>
+                            </select>
+                        </div>
+                        <div id="col-cat">
+                            <label>Categoria</label>
+                            <select id="exp-category">
+                                </select>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="btn-finance-add" class="btn-action" style="background: var(--danger); color: white;" onclick="addFinanceRecord(false)">ADICIONAR</button>
+                            <button id="btn-finance-add-paid" class="btn-action" style="background: var(--success); color: white;" onclick="addFinanceRecord(true)">Lançar Pago ✅</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; background: var(--bg-card); padding: 1.2rem; border-radius: 0.75rem; border: 1px solid var(--border); flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label>Filtrar por Categoria</label>
+                        <select id="filter-category" onchange="renderFinanceTable()">
+                            <option value="all">Todas as Categorias</option>
+                            </select>
+                    </div>
+                    <div style="flex: 2; min-width: 250px;">
+                        <label>Buscar por Descrição</label>
+                        <input type="text" id="filter-search" placeholder="Buscar..." oninput="renderFinanceTable()">
+                    </div>
+                    <div style="background: #0d0d0d; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border);">
+                        <span id="label-total-filtrado" style="font-size: 0.75rem; color: var(--text-muted); display: block;">Total Despesas</span>
+                        <strong id="filtered-total" style="color: var(--warn); font-size: 1.1rem;">R$ 0,00</strong>
+                    </div>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th class="col-recurrence" style="cursor:pointer" onclick="toggleFinanceSort('recurrence')">Recorrência ⬍</th>
+                                <th style="cursor:pointer" onclick="toggleFinanceSort('category')">Categoria ⬍</th>
+                                <th>Descrição</th>
+                                <th class="col-status">Status</th>
+                                <th style="cursor:pointer" onclick="toggleFinanceSort('valor')">Valor ⬍</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-finance"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, addDoc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyCInLdLMFOT7swPnMWtUH0z5o73RkwahCQ",
+  authDomain: "bradock-c664e.firebaseapp.com",
+  projectId: "bradock-c664e",
+  storageBucket: "bradock-c664e.firebasestorage.app",
+  messagingSenderId: "140609259960",
+  appId: "1:140609259960:web:c7706bc37061c97ea8674d",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- ALTERAÇÃO SOLICITADA ---
+        const EMAIL_BARBEIRO_2 = "saullogabriel18@hotmail.com"; 
+        let loggedUserEmail = "";
+        let selectedBarbeiro = "Todos";
+
+        // Mapeamento de cores por serviço
+        const serviceColors = {
+            "Corte Masculino": "#0800ff",     // Azul
+            "Barba Completa": "#d0ff00",      // Amarelo
+            "Combo Corte + Barba": "#3cff00", // Verdão
+            "Corte Infantil": "#10b981",      // Verde
+            "Corte Infantil (Autismo)": "#10b981", // Verde (Igual para agrupar)
+            "Cortesia": "#a0a0a0",            // Cinza
+            "Bloqueio": "#ef4444",            // Vermelho
+            "Outros": "#3b82f6"               // Azul claro
+        };
+
+        let agendamentosData = [];
+        let configDiasData = {};
+        let despesasData = [];
+        let entradasData = [];
+        let financeMode = 'despesas'; // 'despesas' ou 'entradas'
+
+        const financeCategories = {
+            despesas: ["Produtos", "Aluguel", "Marketing", "Manutenção", "Utilidades", "Pessoal", "Outros"],
+            entradas: ["Refrigerantes", "Chips / Snacks", "Cremes / Pomadas", "Outros Produtos"]
+        };
+
+        let currentCalendarDate = new Date();
+        let selectedDateISO = new Date().toISOString().split('T')[0];
+        let selectedSlot = null;
+        let isAutismo = false; 
+        let cortesiaSlots = 1; // Estado para os slots da Cortesia
+        let mainChart = null; 
+        let pieChart = null;
+        let sortClientsByInactivity = true; 
+        let financeSort = { column: 'data', direction: 'desc' };
+
+        const baseSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:00", "13:40", "14:20", "15:00", "15:40", "16:20", "17:00", "17:40", "18:20"];
+
+        // Função Global para o Toggle Autismo
+        window.setAutismo = (val) => {
+            isAutismo = val;
+            const btnYes = document.getElementById('autismo-yes');
+            const btnNo = document.getElementById('autismo-no');
+            
+            if(btnYes && btnNo) {
+                if(val) {
+                    btnYes.classList.add('active-yes');
+                    btnNo.classList.remove('active-no');
+                } else {
+                    btnNo.classList.add('active-no');
+                    btnYes.classList.remove('active-yes');
+                }
+            }
+            updateWarning();
+        };
+
+        // Função Global para os Slots da Cortesia
+        window.setCortesiaSlots = (num) => {
+            cortesiaSlots = num;
+            const btn1 = document.getElementById('cortesia-1');
+            const btn2 = document.getElementById('cortesia-2');
+            
+            if(btn1 && btn2) {
+                if(num === 1) {
+                    btn1.classList.add('active-primary');
+                    btn2.classList.remove('active-primary');
+                } else {
+                    btn2.classList.add('active-primary');
+                    btn1.classList.remove('active-primary');
+                }
+            }
+            updateWarning();
+        };
+
+        window.notifyInactive = (nome, telefone, dias) => {
+            const clean = telefone.replace(/\D/g, "");
+            const phone = clean.startsWith("55") ? clean : "55" + clean;
+            const msg = encodeURIComponent(
+                `Olá, ${nome}! 👋\n\n` +
+                `Sentimos sua falta na *Lopes Barbearia*! ✂️\n` +
+                `Já fazem ${dias} dias desde sua última visita.\n\n` +
+                `Que tal agendar um horário pra dar aquele tapa no visual? 😉`
+            );
+            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${msg}`);
+        };
+
+        window.toggleClientSort = () => {
+            sortClientsByInactivity = !sortClientsByInactivity;
+            renderClients();
+        };
+
+        window.toggleFinanceSort = (column) => {
+            if (financeSort.column === column) {
+                financeSort.direction = financeSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                financeSort.column = column;
+                financeSort.direction = 'desc';
+            }
+            renderFinanceTable();
+        };
+
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('view-title').innerText = tab.charAt(0).toUpperCase() + tab.slice(1);
+            
+            if(window.event && window.event.currentTarget && window.event.currentTarget.classList) {
+                window.event.currentTarget.classList.add('active');
+            }
+            
+            if(tab === 'dashboard') {
+                setTimeout(() => updateDashboard(), 50);
+            }
+            if(tab === 'agendamentos') renderCalendar();
+            if(tab === 'clientes') renderClients();
+            if(tab === 'finanças') switchFinanceMode('despesas');
+        };
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                loggedUserEmail = user.email;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'grid';
+
+                const filterB = document.getElementById('filterBarbeiro');
+
+                const hideStatCard = (id, hide) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const card = el.closest('.stat-card');
+                    if (card) card.style.display = hide ? 'none' : '';
+                };
+
+                if (loggedUserEmail === EMAIL_BARBEIRO_2) {
+                    // Barbeiro 2 não gerencia finanças aqui
+                    document.getElementById('nav-financas').style.display = 'none';
+                    selectedBarbeiro = 'Barbeiro 2';
+                    if(filterB) {
+                        filterB.value = 'Barbeiro 2';
+                        filterB.disabled = true;
+                    }
+                    // Mostrar apenas gráficos + comissão + saldo
+                    hideStatCard('dash-revenue', true);
+                    hideStatCard('dash-expense', true);
+                    hideStatCard('dash-b2-earnings', true);
+                    hideStatCard('dash-commission', false);
+                    hideStatCard('dash-profit', false);
+                } else {
+                    document.getElementById('nav-financas').style.display = 'flex';
+                    if(filterB) filterB.disabled = false;
+                    // Para o dono, ocultar o card de Ganhos do Barbeiro 2 (conforme solicitado)
+                    hideStatCard('dash-b2-earnings', true);
+                    // Garantir que receita e despesas fiquem visíveis para o dono
+                    hideStatCard('dash-revenue', false);
+                    hideStatCard('dash-expense', false);
+                    hideStatCard('dash-commission', false);
+                    hideStatCard('dash-profit', false);
+                }
+
+                initListeners();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('admin-panel').style.display = 'none';
+            }
+        });
+
+        const loginError = document.getElementById('login-error');
+        const btnLogin = document.getElementById('btn-login');
+        if(btnLogin) {
+            btnLogin.onclick = async () => {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    loginError.innerText = "Por favor, preencha todos os campos.";
+                    loginError.style.display = 'block';
+                    return;
+                }
+
+                btnLogin.disabled = true;
+                btnLogin.innerText = "AUTENTICANDO...";
+                loginError.style.display = 'none';
+
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    btnLogin.disabled = false;
+                    btnLogin.innerText = "ENTRAR";
+                    loginError.style.display = 'block';
+                    if (error.code === 'auth/invalid-credential') loginError.innerText = "Credenciais inválidas.";
+                    else loginError.innerText = "Erro: " + error.message;
+                }
+            };
+        }
+
+        window.logout = () => signOut(auth);
+
+        function initListeners() {
+            let qAgendamentos = collection(db, "agendamentos");
+            
+            if (loggedUserEmail === EMAIL_BARBEIRO_2) {
+                // Considera formatos antigos e novos do campo 'barbeiro'
+                qAgendamentos = query(collection(db, "agendamentos"), where("barbeiro", "in", ["Barbeiro 2", "barbeiro2", "barbeiro 2"]));
+            }
+
+            onSnapshot(qAgendamentos, snap => {
+                agendamentosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                try {
+                    const serviceSelect = document.getElementById('edit-service');
+                    const options = serviceSelect ? Array.from(serviceSelect.options).map(o => {
+                        const parts = o.value.split('|');
+                        return { name: (parts[0] || '').trim(), price: parseFloat(parts[1]) || 0 };
+                    }) : [];
+
+                    agendamentosData = agendamentosData.map(a => {
+                        const out = { ...a };
+                        out.preco = Number(out.preco) || 0;
+
+                        if (options.length) {
+                            const originalServ = (out.servico || '').toString();
+                            const target = originalServ.toLowerCase();
+
+                            let match = options.find(o => o.name.toLowerCase() === target || o.name.toLowerCase().includes(target) || target.includes(o.name.toLowerCase()));
+
+                            if (!match && out.preco !== undefined) {
+                                match = options.find(o => Math.abs((o.price || 0) - Number(out.preco || 0)) < 0.01);
+                            }
+
+                            if (match) {
+                                if (out.preco === undefined || out.preco === 0) out.preco = match.price;
+                                const hasAutismo = out.autismo === true || /autis/i.test(originalServ);
+                                out.servico = match.name + (hasAutismo ? ' (Autismo)' : '');
+                            }
+                        }
+
+                        return out;
+                    });
+                } catch (e) {
+                    console.warn('Normalization failed:', e);
+                }
+
+                updateDashboard();
+                renderClients();
+                renderCalendar();
+                renderSlots();
+            });
+
+            onSnapshot(collection(db, "config_dias"), snap => {
+                configDiasData = {};
+                snap.forEach(d => configDiasData[d.id] = d.data());
+                renderCalendar();
+                renderSlots();
+            });
+
+            onSnapshot(collection(db, "despesas"), snap => {
+                despesasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                if(financeMode === 'despesas') renderFinanceTable();
+                updateDashboard();
+            });
+
+            onSnapshot(collection(db, "entradas_produtos"), snap => {
+                entradasData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                if(financeMode === 'entradas') renderFinanceTable();
+                updateDashboard();
+            });
+        }
+
+        (function initBarberFilter(){
+            const f = document.getElementById('filterBarbeiro');
+            if(!f) return;
+            f.addEventListener('change', (e) => {
+                selectedBarbeiro = e.target.value;
+                renderCalendar();
+                renderSlots();
+            });
+        })();
+
+        window.changeMonth = (v) => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + v); renderCalendar(); };
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-body');
+            const label = document.getElementById('calendar-month-year');
+            if(!grid || !label) return;
+            
+            grid.innerHTML = '';
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            label.innerText = new Intl.DateTimeFormat('pt-BR', {month:'long', year:'numeric'}).format(currentCalendarDate).toUpperCase();
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="calendar-day" style="opacity:0"></div>`;
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const [y, m, dayNum] = iso.split('-').map(Number);
+                const dayOfWeek = new Date(y, m - 1, dayNum).getDay();
+
+                const config = configDiasData[iso] || { status: (dayOfWeek === 0 ? 'closed' : 'open') };
+                const dayAgends = agendamentosData.filter(a => a.data === iso && (selectedBarbeiro === 'Todos' || a.barbeiro === selectedBarbeiro));
+
+                const div = document.createElement('div');
+                div.className = `calendar-day ${iso === selectedDateISO ? 'selected' : ''} ${config.status === 'closed' ? 'closed' : ''}`;
+                div.onclick = async () => {
+                    selectedDateISO = iso;
+                    renderCalendar();
+                    renderSlots();
+                };
+                div.innerHTML = `<div class="day-number">${d}</div>`;
+                
+                dayAgends.forEach(a => {
+                    const baseService = (a.servico || "").replace(" (Autismo)", "");
+                    const color = a.status === 'blocked' ? serviceColors["Bloqueio"] : (serviceColors[baseService] || serviceColors["Outros"]);
+                    div.innerHTML += `<span style="width:5px;height:5px;background:${color};display:inline-block;margin:1px;border-radius:2px"></span>`;
+                });
+                grid.appendChild(div);
+            }
+        }
+
+        function renderSlots() {
+            const grid = document.getElementById('slots-grid');
+            if(!grid) return;
+            document.getElementById('selected-date-label').innerText = selectedDateISO.split('-').reverse().join('/');
+            document.getElementById('slot-editor').style.display = 'none';
+            grid.innerHTML = '';
+
+            const config = configDiasData[selectedDateISO] || {};
+            const slots = config.extraSlots ? [...baseSlots, ...config.extraSlots].sort() : baseSlots;
+
+            slots.forEach((time, index) => {
+                const agend = agendamentosData.find(a => a.data === selectedDateISO && a.hora === time && (selectedBarbeiro === 'Todos' || a.barbeiro === selectedBarbeiro));
+                const btn = document.createElement('div');
+                
+                let isPartOfLong = false;
+                if (index > 0) {
+                    const prevTime = slots[index - 1];
+                    const prevAgend = agendamentosData.find(a => a.data === selectedDateISO && a.hora === prevTime && (selectedBarbeiro === 'Todos' || a.barbeiro === selectedBarbeiro));
+                    if (prevAgend && prevAgend.slots === 2) isPartOfLong = true;
+                }
+
+                const isEditing = selectedSlot && selectedSlot.time === time;
+                btn.className = `slot-btn ${agend ? (agend.status === 'blocked' ? 'blocked' : 'occupied') : ''} ${isPartOfLong ? 'part-of-long' : ''} ${isEditing ? 'active-editing' : ''}`;
+                
+                if (agend) {
+                    let displayName = agend.nome || agend.cliente || '...';
+                    if(agend.status === 'completed') {
+                        displayName += ' ✅';
+                    }
+                    btn.innerText = `${time} - ${agend.status === 'blocked' ? 'BLOQUEADO' : displayName}`;
+                    const baseService = (agend.servico || "").replace(" (Autismo)", "");
+                    const sColor = agend.status === 'blocked' ? serviceColors["Bloqueio"] : (serviceColors[baseService] || serviceColors["Outros"]);
+                    btn.style.borderLeft = `4px solid ${sColor}`;
+                } else if (isPartOfLong) {
+                    const owner = agendamentosData.find(a => a.data === selectedDateISO && a.hora === slots[index-1]);
+                    const ownerName = owner ? (owner.nome || owner.cliente || '...') : '...';
+                    btn.innerText = `${time} - (Reservado: ${ownerName})`;
+                    btn.style.opacity = "0.5";
+                } else {
+                    btn.innerText = time;
+                }
+
+                btn.onclick = () => {
+                    if (isPartOfLong) return;
+                    openSlotEditor(time, agend, slots, index);
+                };
+                grid.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function openSlotEditor(time, agend, allSlots, index) {
+            selectedSlot = { time, agend, allSlots, index };
+            renderSlots();
+            
+            document.getElementById('slot-editor').style.display = 'block';
+            document.getElementById('editor-title').innerText = `Horário: ${time}`;
+            const editClientVal = agend ? ((agend.nome === 'BLOQUEADO' || agend.cliente === 'BLOQUEADO') ? '' : (agend.nome || agend.cliente || '')) : '';
+            document.getElementById('edit-client').value = editClientVal;
+            document.getElementById('edit-phone').value = agend?.telefone || '';
+            
+            const barberSelect = document.getElementById('edit-barber');
+            if (loggedUserEmail === EMAIL_BARBEIRO_2) {
+                barberSelect.value = "Barbeiro 2";
+                barberSelect.disabled = true;
+            } else {
+                barberSelect.value = agend?.barbeiro || 'Barbeiro 1';
+                barberSelect.disabled = false;
+            }
+
+            const serviceSelect = document.getElementById('edit-service');
+            if (agend && agend.servico) {
+                const target = agend.servico.toString().toLowerCase();
+                for (let i = 0; i < serviceSelect.options.length; i++) {
+                    const optName = serviceSelect.options[i].value.split('|')[0].toLowerCase();
+                    if (optName === target || optName.includes(target) || target.includes(optName)) {
+                        serviceSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            setAutismo(agend?.autismo || false);
+            setCortesiaSlots(agend?.slots || 1);
+
+            document.getElementById('edit-observations').value = agend?.observacoes || '';
+            document.getElementById('btn-cancel-booking').style.display = agend ? 'block' : 'none';
+            document.getElementById('btn-complete-booking').style.display = (agend && agend.status !== 'completed' && agend.status !== 'blocked') ? 'block' : 'none';
+            
+            const btnWhatsapp = document.getElementById('btn-whatsapp-client');
+            if (agend && agend.status !== 'blocked') {
+                btnWhatsapp.style.display = 'flex';
+                btnWhatsapp.onclick = () => {
+                    const telefone = agend.telefone || prompt("Insira o número de WhatsApp do cliente (com DDD):", "2899082741");
+                    if(!telefone) return;
+                    const cleanPhone = telefone.replace(/\D/g, "");
+                    const fullPhone = cleanPhone.startsWith("55") ? cleanPhone : "55" + cleanPhone;
+                    const displayName = agend.nome || agend.cliente || 'cliente';
+                    const msg = encodeURIComponent(`Olá, ${displayName}! 👋\n\nEstou passando para confirmar o seu agendamento na *Lopes Barbearia*.\n\n📅 Data: ${agend.data.split('-').reverse().join('/')}\n⏰ Hora: ${agend.hora}h\n✂️ Serviço: ${agend.servico}\n\nPodemos confirmar? 😉`);
+                    window.open(`https://api.whatsapp.com/send?phone=${fullPhone}&text=${msg}`);
+                };
+            } else {
+                btnWhatsapp.style.display = 'none';
+            }
+            updateWarning();
+        }
+
+        function updateWarning() {
+            const serviceSelect = document.getElementById('edit-service');
+            if(!serviceSelect) return;
+
+            const servRaw = serviceSelect.value.split('|');
+            const isInfantil = servRaw[0].includes("Infantil");
+            const isCortesia = servRaw[0].includes("Cortesia");
+            
+            const autismoContainer = document.getElementById('autismo-container');
+            const cortesiaContainer = document.getElementById('cortesia-slots-container');
+            
+            autismoContainer.style.display = isInfantil ? 'block' : 'none';
+            cortesiaContainer.style.display = isCortesia ? 'block' : 'none';
+
+            if (!isInfantil && isAutismo) setAutismo(false);
+
+            let slotsNeeded = parseInt(servRaw[2]);
+            if (isAutismo) slotsNeeded = 2;
+            if (isCortesia) slotsNeeded = cortesiaSlots;
+
+            const warning = document.getElementById('warning-double');
+            if(warning) warning.style.display = (slotsNeeded > 1) ? 'block' : 'none';
+        }
+        document.getElementById('edit-service').onchange = updateWarning;
+
+        window.saveBooking = async () => {
+            const nome = document.getElementById('edit-client').value;
+            const telefone = document.getElementById('edit-phone').value;
+            const barbeiro = document.getElementById('edit-barber').value;
+            const observacoes = document.getElementById('edit-observations').value || '';
+            const servRaw = document.getElementById('edit-service').value.split('|');
+            
+            let slotsNeeded = parseInt(servRaw[2]);
+            let precoFinal = parseFloat(servRaw[1]);
+            let servicoFinal = servRaw[0];
+
+            if(isAutismo) {
+                slotsNeeded = 2;
+                servicoFinal += " (Autismo)";
+                if(servRaw[0].includes("Infantil")) precoFinal = 60;
+            }
+
+            if(servRaw[0].includes("Cortesia")) {
+                slotsNeeded = cortesiaSlots;
+            }
+
+            if(!nome) return alert('Insira o nome do cliente');
+
+            if (slotsNeeded > 1) {
+                const nextTime = selectedSlot.allSlots[selectedSlot.index + 1];
+                if (!nextTime) return alert("Não há horário seguinte disponível.");
+                const nextBusy = agendamentosData.find(a => a.data === selectedDateISO && a.hora === nextTime);
+                if (nextBusy && (!selectedSlot.agend || nextBusy.id !== selectedSlot.agend.id)) {
+                    return alert("O próximo horário está ocupado.");
+                }
+            }
+
+            const data = {
+                nome, telefone, barbeiro, observacoes, data: selectedDateISO, hora: selectedSlot.time,
+                servico: servicoFinal, preco: precoFinal,
+                autismo: isAutismo,
+                slots: slotsNeeded,
+                status: selectedSlot.agend?.status || 'confirmed', timestamp: new Date()
+            };
+
+            try {
+                if(selectedSlot.agend) await updateDoc(doc(db, "agendamentos", selectedSlot.agend.id), data);
+                else await addDoc(collection(db, "agendamentos"), data);
+                document.getElementById('slot-editor').style.display = 'none';
+                selectedSlot = null;
+                renderSlots();
+            } catch(e) { alert("Erro ao salvar: " + e.message); }
+        };
+
+        window.completeBooking = async () => {
+            if(!selectedSlot || !selectedSlot.agend) return;
+            if(confirm('Confirmar que o cliente compareceu e finalizar atendimento? (O valor entrará na receita bruta)')){
+                try {
+                    await updateDoc(doc(db, "agendamentos", selectedSlot.agend.id), { status: 'completed' });
+                    document.getElementById('slot-editor').style.display = 'none';
+                    selectedSlot = null;
+                    renderSlots();
+                } catch(e) { alert("Erro ao finalizar: " + e.message); }
+            }
+        };
+
+        window.cancelBooking = async () => {
+            if(!selectedSlot || !selectedSlot.agend) return;
+            const ag = selectedSlot.agend;
+
+            if(confirm('Cancelar agendamento?')) {
+                await deleteDoc(doc(db, "agendamentos", ag.id));
+                document.getElementById('slot-editor').style.display = 'none';
+                selectedSlot = null;
+                renderSlots();
+            }
+        };
+
+        window.toggleBlockSlot = async () => {
+            const data = {
+                nome: "BLOQUEADO", data: selectedDateISO, hora: selectedSlot.time,
+                servico: "Bloqueio", preco: 0, status: 'blocked', slots: 1, timestamp: new Date()
+            };
+            if(selectedSlot.agend) await updateDoc(doc(db, "agendamentos", selectedSlot.agend.id), data);
+            else await addDoc(collection(db, "agendamentos"), data);
+            document.getElementById('slot-editor').style.display = 'none';
+            selectedSlot = null;
+            renderSlots();
+        };
+
+        window.toggleDayStatus = async (status) => {
+            try {
+                await setDoc(doc(db, "config_dias", selectedDateISO), { status, updatedAt: new Date() }, { merge: true });
+                renderSlots(); 
+                alert(`Dia ${selectedDateISO} atualizado para: ${status}`);
+            } catch (e) { alert('Erro ao atualizar status do dia: ' + e.message); }
+        };
+
+        window.addExtraSlot = async () => {
+            const configRef = doc(db, "config_dias", selectedDateISO);
+            const snap = await getDoc(configRef);
+            const config = snap.exists() ? snap.data() : {};
+            const currentSlots = config.extraSlots ? [...baseSlots, ...config.extraSlots].sort() : [...baseSlots].sort();
+            
+            const lastTime = currentSlots[currentSlots.length - 1];
+            const [h, m] = lastTime.split(':').map(Number);
+            let nextM = m + 40;
+            let nextH = h;
+            if(nextM >= 60) { nextH++; nextM -= 60; }
+            const newTime = `${String(nextH).padStart(2,'0')}:${String(nextM).padStart(2,'0')}`;
+            
+            const extras = config.extraSlots || [];
+            extras.push(newTime);
+            await setDoc(configRef, { extraSlots: extras }, { merge: true });
+        };
+
+        let currentPeriod = 'month';
+        function setDashboardPeriod(p) {
+            currentPeriod = p;
+            document.getElementById('period-month').style.opacity = p === 'month' ? 1 : 0.6;
+            document.getElementById('period-week').style.opacity = p === 'week' ? 1 : 0.6;
+            document.getElementById('period-year').style.opacity = p === 'year' ? 1 : 0.6;
+            updateDashboard();
+        }
+        document.getElementById('period-month').onclick = () => setDashboardPeriod('month');
+        document.getElementById('period-week').onclick = () => setDashboardPeriod('week');
+        document.getElementById('period-year').onclick = () => setDashboardPeriod('year');
+
+        function getPeriodRange(p) {
+            const now = new Date();
+            if (p === 'month') {
+                const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                const end = new Date(now.getFullYear(), now.getMonth()+1, 1);
+                return {start, end};
+            } else if (p === 'week') {
+                const start = new Date(now);
+                const day = (start.getDay() + 6) % 7; 
+                start.setHours(0,0,0,0);
+                start.setDate(start.getDate() - day);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 7);
+                return {start, end};
+            } else {
+                const start = new Date(now.getFullYear(), 0, 1);
+                const end = new Date(now.getFullYear()+1, 0, 1);
+                return {start, end};
+            }
+        }
+
+        function updateDashboard() {
+            const range = getPeriodRange(currentPeriod);
+            let rev = 0; 
+            let commB2 = 0;
+            let b2GrossCount = 0;
+            const sMap = {};
+
+            agendamentosData.forEach(a => { 
+                if(a.status === 'completed' && (a.nome || a.cliente) !== 'BLOQUEADO') {
+                    const dt = new Date(a.data + 'T00:00:00');
+                    if (dt >= range.start && dt < range.end) {
+                        const price = Number(a.preco || 0);
+                        rev += price;
+                        sMap[a.servico] = (sMap[a.servico] || 0) + 1;
+                        
+                        if(a.barbeiro === 'Barbeiro 2') {
+                            commB2 += price * 0.10;
+                            b2GrossCount += price;
+                        }
+                    }
+                }
+            });
+
+            if (loggedUserEmail !== EMAIL_BARBEIRO_2) {
+                entradasData.forEach(e => {
+                    const dt = new Date(e.data + 'T00:00:00');
+                    if (dt >= range.start && dt < range.end) {
+                        rev += Number(e.valor || 0);
+                    }
+                });
+            }
+
+            let exp = 0; 
+            if (loggedUserEmail !== EMAIL_BARBEIRO_2) {
+                despesasData.forEach(e => {
+                    const dt = new Date(e.data + 'T00:00:00');
+                    if (dt >= range.start && dt < range.end) {
+                        exp += Number(e.valor || 0);
+                    }
+                });
+            }
+
+            const b2Net = b2GrossCount * 0.90;
+            const profit = rev - exp - commB2;
+
+            document.getElementById('dash-revenue').innerText = `R$ ${rev.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-expense').innerText = `R$ ${exp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-commission').innerText = `R$ ${commB2.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-b2-earnings').innerText = `R$ ${b2Net.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            
+            const profitEl = document.getElementById('dash-profit');
+            profitEl.innerText = `R$ ${profit.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            profitEl.style.color = profit > 0 ? 'var(--success)' : (profit < 0 ? 'var(--danger)' : 'var(--text-muted)');
+            
+            updateCharts(rev, exp + commB2, sMap);
+        }
+
+        function updateCharts(rev, exp, sMap) {
+            const c1 = document.getElementById('mainChart')?.getContext('2d');
+            if(c1) {
+                if(mainChart) mainChart.destroy();
+                mainChart = new Chart(c1, {
+                    type: 'bar',
+                    data: { 
+                        labels: ['Faturamento', 'Custos+Comiss.'], 
+                        datasets: [{ data: [rev, exp], backgroundColor: ['#1e90ff', '#ef4444'], barThickness: 50 }] 
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }, 
+                        scales: { 
+                            y: { grid: { color: '#222' }, ticks: { color: '#aaa' }, beginAtZero: true }, 
+                            x: { ticks: { color: '#aaa' }, grid: { display: false } } 
+                        } 
+                    }
+                });
+            }
+
+            const c2 = document.getElementById('pieChart')?.getContext('2d');
+            if(c2) {
+                const labels = Object.keys(sMap).sort((a, b) => {
+                    const order = ["Corte Masculino", "Barba Completa", "Combo Corte + Barba", "Corte Infantil", "Corte Infantil (Autismo)", "Cortesia"];
+                    const indexA = order.findIndex(o => a === o);
+                    const indexB = order.findIndex(o => b === o);
+                    return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
+                });
+                
+                const data = labels.map(label => sMap[label]);
+                const labelsWithValues = labels.map((label, index) => `${label}: ${data[index]}`);
+
+                const backgroundColors = labels.map(label => {
+                    const cleanLabel = label.replace("Venda: ", "");
+                    return serviceColors[cleanLabel] || serviceColors["Outros"];
+                });
+
+                if(pieChart) pieChart.destroy();
+                pieChart = new Chart(c2, {
+                    type: 'doughnut',
+                    data: { 
+                        labels: labelsWithValues, 
+                        datasets: [{ 
+                            data: data, 
+                            backgroundColor: backgroundColors, 
+                            borderWidth: 0 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                position: 'right', 
+                                labels: { 
+                                    color: '#aaa', 
+                                    boxWidth: 12, 
+                                    font: { size: 11 },
+                                    padding: 15
+                                } 
+                            } 
+                        } 
+                    }
+                });
+            }
+        }
+
+        function renderClients() {
+            const b = document.getElementById('list-clients'); 
+            if(!b) return; 
+            b.innerHTML = '';
+            const m = {}; 
+            
+            agendamentosData.filter(a => (a.nome || a.cliente) && ((a.nome || a.cliente) !== 'BLOQUEADO')).forEach(a => {
+                const nome = a.nome || a.cliente;
+                const fone = (a.telefone || '').trim();
+                const email = (a.email || '').trim();
+                const uniqueKey = `${nome.toLowerCase()}_${fone}_${email.toLowerCase()}`;
+
+                if(!m[uniqueKey]) {
+                    m[uniqueKey] = { 
+                        nome: nome,
+                        contato: fone,
+                        email: email,
+                        last: a.data, 
+                        total: 0, 
+                        count: 0 
+                    };
+                }
+                
+                if(a.status === 'completed') {
+                    m[uniqueKey].total += Number(a.preco || 0); 
+                    m[uniqueKey].count++;
+                    if(new Date(a.data) > new Date(m[uniqueKey].last)) {
+                        m[uniqueKey].last = a.data;
+                    }
+                }
+            });
+
+            Object.keys(m).sort((a, b) => { 
+                return sortClientsByInactivity
+                    ? new Date(m[a].last) - new Date(m[b].last)
+                    : new Date(m[b].last) - new Date(m[a].last);
+            }).forEach(k => {
+                const c = m[k];
+                const lastDate = new Date(c.last + 'T00:00:00'); 
+                const diffDays = Math.floor((new Date() - lastDate) / (1000 * 60 * 60 * 24)); 
+
+                const btnWhatsapp = c.contato 
+                    ? `<button class="btn-action" style="padding:4px 8px;font-size:0.7rem" onclick="notifyInactive('${c.nome}','${c.contato}',${diffDays})">📲 Avisar</button>`
+                    : '-';
+
+                b.innerHTML += `
+                    <tr>
+                        <td><b>${c.nome}</b></td>
+                        <td>
+                            <div style="font-size:0.8rem; color:var(--text-muted)">${c.contato || 'Sem Telefone'}</div>
+                            <div style="font-size:0.7rem; color:var(--primary)">${c.email || ''}</div>
+                        </td>
+                        <td>${c.last.split('-').reverse().join('/')}</td>
+                        <td style="color:var(--primary)">R$ ${c.total.toFixed(2)}</td>
+                        <td>${diffDays} dias</td>
+                        <td>${btnWhatsapp}</td>
+                    </tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        window.switchFinanceMode = (mode) => {
+            financeMode = mode;
+            const btnDesp = document.getElementById('toggle-despesas');
+            const btnEntr = document.getElementById('toggle-entradas');
+            const btnAdd = document.getElementById('btn-finance-add');
+            const btnAddPaid = document.getElementById('btn-finance-add-paid');
+            const formTitle = document.getElementById('finance-form-title');
+            const recurrenceContainer = document.getElementById('recurrence-container');
+            const recurrenceCol = document.querySelector('.col-recurrence');
+            const statusCol = document.querySelector('.col-status');
+            const labelTotal = document.getElementById('label-total-filtrado');
+            const totalVal = document.getElementById('filtered-total');
+            const quickContainer = document.getElementById('quick-products-container');
+            const colDesc = document.getElementById('col-desc');
+            const colCat = document.getElementById('col-cat');
+
+            document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+
+            if(mode === 'despesas') {
+                btnDesp.classList.add('active');
+                btnEntr.classList.remove('active');
+                btnAdd.style.backgroundColor = 'var(--danger)';
+                btnAddPaid.style.display = 'flex';
+                formTitle.innerText = 'Lançar Nova Despesa';
+                recurrenceContainer.style.display = 'block';
+                if(recurrenceCol) recurrenceCol.style.display = 'table-cell';
+                if(statusCol) statusCol.style.display = 'table-cell';
+                labelTotal.innerText = 'Total Despesas';
+                totalVal.style.color = 'var(--warn)';
+                quickContainer.style.display = 'none';
+                colDesc.style.display = 'block';
+                colCat.style.display = 'block';
+            } else {
+                btnEntr.classList.add('active');
+                btnDesp.classList.remove('active');
+                btnAdd.style.backgroundColor = 'var(--success)';
+                btnAddPaid.style.display = 'none';
+                formTitle.innerText = 'Lançamento Rápido de Venda';
+                recurrenceContainer.style.display = 'none';
+                if(recurrenceCol) recurrenceCol.style.display = 'none';
+                if(statusCol) statusCol.style.display = 'none';
+                labelTotal.innerText = 'Total Entradas';
+                totalVal.style.color = 'var(--success)';
+                quickContainer.style.display = 'block';
+                colDesc.style.display = 'none'; 
+                colCat.style.display = 'none';  
+            }
+
+            const selectCat = document.getElementById('exp-category');
+            selectCat.innerHTML = financeCategories[mode].map(c => `<option value="${c}">${c}</option>`).join('');
+
+            const filterCat = document.getElementById('filter-category');
+            filterCat.innerHTML = `<option value="all">Todas as Categorias</option>` + 
+                financeCategories[mode].map(c => `<option value="${c}">${c}</option>`).join('');
+
+            renderFinanceTable();
+        };
+
+        window.quickAdd = async (cat) => {
+            const valor = parseFloat(document.getElementById('exp-val').value);
+            const data = document.getElementById('exp-date').value;
+            if(isNaN(valor) || !data) return alert('Insira o valor da venda');
+
+            try {
+                await addDoc(collection(db, 'entradas_produtos'), { 
+                    descricao: cat, 
+                    valor, 
+                    data, 
+                    category: cat, 
+                    timestamp: new Date() 
+                });
+                document.getElementById('exp-val').value = '';
+            } catch(e) { alert("Erro: " + e.message); }
+        };
+
+        window.addFinanceRecord = async (isPaid) => {
+            const desc = document.getElementById('exp-desc').value;
+            const valor = parseFloat(document.getElementById('exp-val').value);
+            const data = document.getElementById('exp-date').value;
+            const recurrence = document.getElementById('exp-recurrence').value;
+            const category = document.getElementById('exp-category').value;
+
+            if(isNaN(valor) || !data) return alert('Preencha os campos obrigatórios.');
+
+            const collectionName = financeMode === 'despesas' ? 'despesas' : 'entradas_produtos';
+            const payload = { 
+                descricao: financeMode === 'despesas' ? desc : category, 
+                valor, 
+                data, 
+                category, 
+                timestamp: new Date() 
+            };
+            if(financeMode === 'despesas') {
+                payload.recurrence = recurrence;
+                payload.pago = isPaid;
+            }
+
+            try {
+                await addDoc(collection(db, collectionName), payload);
+                document.getElementById('exp-desc').value = '';
+                document.getElementById('exp-val').value = '';
+            } catch(e) { alert("Erro ao salvar: " + e.message); }
+        };
+
+        window.togglePaidStatus = async (id, currentStatus) => {
+            await updateDoc(doc(db, "despesas", id), { pago: !currentStatus });
+        };
+
+        window.deleteFinanceRecord = async (id) => {
+            if(confirm('Excluir este registro permanentemente?')) {
+                const coll = financeMode === 'despesas' ? 'despesas' : 'entradas_produtos';
+                await deleteDoc(doc(db, coll, id));
+            }
+        };
+
+        window.renderFinanceTable = () => {
+            const b = document.getElementById('list-finance');
+            const catFilter = document.getElementById('filter-category').value;
+            const searchFilter = document.getElementById('filter-search').value.toLowerCase();
+            const data = financeMode === 'despesas' ? [...despesasData] : [...entradasData];
+            
+            b.innerHTML = '';
+            let total = 0;
+            const rMap = { weekly: 'Semanal', monthly: 'Mensal', yearly: 'Anual' };
+
+            const filteredData = data.filter(item => {
+                const matchesCat = catFilter === 'all' || item.category === catFilter;
+                const matchesSearch = (item.descricao || '').toLowerCase().includes(searchFilter);
+                return matchesCat && matchesSearch;
+            });
+
+            filteredData.sort((a, b) => {
+                let valA, valB;
+                const col = financeSort.column;
+                const dir = financeSort.direction === 'asc' ? 1 : -1;
+
+                if (col === 'valor') {
+                    valA = Number(a.valor || 0);
+                    valB = Number(b.valor || 0);
+                } else if (col === 'data') {
+                    valA = a.data || '';
+                    valB = b.data || '';
+                } else if (col === 'recurrence') {
+                    valA = a.recurrence || '';
+                    valB = b.recurrence || '';
+                } else if (col === 'category') {
+                    valA = a.category || '';
+                    valB = b.category || '';
+                }
+
+                if (valA < valB) return -1 * dir;
+                if (valA > valB) return 1 * dir;
+                return 0;
+            });
+
+            filteredData.forEach(item => {
+                const v = Number(item.valor || 0);
+                total += v;
+                const rLabel = item.recurrence ? (rMap[item.recurrence] || item.recurrence) : '-';
+                
+                let statusHtml = '';
+                let actionsHtml = '';
+
+                if (financeMode === 'despesas') {
+                    const isPaid = item.pago === true;
+                    statusHtml = `<td><span class="status-badge ${isPaid ? 'status-pago' : 'status-pendente'}">${isPaid ? 'Pago' : 'Pendente'}</span></td>`;
+                    actionsHtml = `
+                        <button class="btn-action" style="background:none; color:${isPaid ? 'var(--warn)' : 'var(--success)'}; padding:0;" onclick="togglePaidStatus('${item.id}', ${isPaid})" title="${isPaid ? 'Marcar como Pendente' : 'Marcar como Pago'}">
+                            <i data-lucide="${isPaid ? 'rotate-ccw' : 'check-circle-2'}"></i>
+                        </button>
+                    `;
+                }
+
+                b.innerHTML += `
+                    <tr>
+                        <td>${item.data.split('-').reverse().join('/')}</td>
+                        <td class="col-recurrence" style="${financeMode === 'entradas' ? 'display:none' : ''}">
+                            <span style="font-size: 0.8rem; opacity: 0.7">${rLabel}</span>
+                        </td>
+                        <td><span style="background: #1a1a1a; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--border)">${item.category || 'Outros'}</span></td>
+                        <td>${item.descricao}</td>
+                        ${statusHtml}
+                        <td style="color:${financeMode === 'despesas' ? 'var(--warn)' : 'var(--success)'}">R$ ${v.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                        <td style="text-align: right; display: flex; justify-content: flex-end; gap: 12px;">
+                            ${actionsHtml}
+                            <button class="btn-action" style="background:none; color:var(--danger); padding:0;" onclick="deleteFinanceRecord('${item.id}')">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            document.getElementById('filtered-total').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            lucide.createIcons();
+        };
+
+    </script>
+</body>
+</html>

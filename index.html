@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lopes Barbearia</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1e90ff;
+            --bg-dark: #0a0a0a;
+            --card-bg: #141414;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --border: #222222;
+        }
+
+        body { 
+            margin: 0; font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark); color: var(--text-main); line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header { 
+            padding: 40px 20px; max-width: 1200px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-area img { height: 50px; border-radius: 50%; border: 2px solid var(--primary); }
+        .logo-area h1 { font-size: 1.4rem; letter-spacing: 2px; margin: 0; text-transform: uppercase; }
+
+        .nav-buttons { display: flex; gap: 10px; }
+        .nav-btn { 
+            background: transparent; border: 1px solid var(--border); color: #fff;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;
+        }
+        .nav-btn.active { background: var(--primary); border-color: var(--primary); color: #000; }
+
+        .main-layout {
+            display: grid; grid-template-columns: 1fr 380px; gap: 40px;
+            max-width: 1200px; margin: 0 auto; padding: 0 20px 60px 20px;
+        }
+
+        .section-title { font-size: 1.4rem; font-weight: 700; margin: 30px 0 20px 0; display: flex; align-items: center; gap: 12px; }
+        .section-num { color: var(--primary); font-style: italic; opacity: 0.6; }
+
+        .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .service-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            padding: 20px; border-radius: 12px; cursor: pointer; transition: 0.3s;
+        }
+        .service-card:hover { border-color: var(--primary); }
+        .service-card.selected { border-color: var(--primary); box-shadow: 0 0 15px rgba(30,144,255,0.2); }
+        .service-card h3 { margin: 0 0 8px 0; font-size: 1rem; }
+        .service-card p { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 15px 0; min-height: 40px; }
+        .service-meta { display: flex; justify-content: space-between; align-items: center; }
+        .service-price { font-weight: 700; color: #fff; }
+
+        .date-picker-wrapper {
+            position: relative;
+            max-width: 320px;
+            margin-bottom: 25px;
+        }
+        
+        .date-picker {
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 15px 15px 15px 45px;
+            border-radius: 12px;
+            color: #ffffff;
+            width: 100%;
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .date-picker:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .date-picker-wrapper::before {
+            content: "";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231e90ff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        ::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .horarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 10px; }
+        .time-btn {
+            background: transparent; border: 1px solid var(--border); color: #fff;
+            padding: 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;
+            position: relative;
+        }
+        
+        .time-btn.selected { 
+            background: var(--primary); 
+            color: #000; 
+            font-weight: 800; 
+            border: 2px dashed #ffffff;
+            box-shadow: 0 0 20px rgba(30,144,255,0.6); 
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .time-btn.blocked { opacity: 0.2; cursor: not-allowed; text-decoration: line-through; pointer-events: none; background: #222; }
+
+        .summary-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            padding: 30px; border-radius: 15px; position: sticky; top: 20px;
+        }
+        .summary-row { margin-bottom: 20px; }
+        .summary-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; display: block; }
+        .summary-value { font-size: 1rem; font-weight: 600; display: block; margin-top: 5px; }
+        .total-price { font-size: 2.2rem; font-weight: 700; margin: 20px 0; display: block; }
+        
+        .btn-confirm {
+            width: 100%; padding: 18px; border-radius: 8px; border: 1px solid var(--border);
+            background: #222; color: #555; font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        .btn-confirm.ready { background: #fff; color: #000; border-color: #fff; box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
+
+        /* AJUSTE PARA MOBILE NA SEÇÃO DE CONTA */
+        .auth-container {
+            background: var(--card-bg); padding: 30px; border-radius: 12px;
+            max-width: 400px; margin: 40px auto; border: 1px solid var(--border);
+            display: none;
+            box-sizing: border-box; /* Garante que o preenchimento não quebre a largura */
+            width: calc(100% - 40px); /* Garante margens laterais no celular */
+        }
+        .auth-container input {
+            width: 100%; padding: 12px; margin: 10px 0; background: #000;
+            border: 1px solid var(--border); color: #fff; border-radius: 6px; box-sizing: border-box;
+            font-size: 16px; /* Evita zoom automático chato no iPhone */
+        }
+        .toggle-auth { color: var(--primary); cursor: pointer; font-size: 0.85rem; text-align: center; display: block; margin-top: 15px; }
+
+        footer { border-top: 1px solid var(--border); padding: 40px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        .map-link { 
+            color: var(--primary); text-decoration: none; font-weight: 700; 
+            display: inline-block; margin-top: 10px; border: 1px solid var(--primary);
+            padding: 8px 15px; border-radius: 5px; transition: 0.3s;
+        }
+        .map-link:hover { background: var(--primary); color: #000; }
+
+        @media (max-width: 900px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+            .services-grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 20px; }
+            .auth-container { margin: 20px auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <img src="https://media.istockphoto.com/id/1446474893/pt/vetorial/barbershop-logo-vector-salon-logo.jpg?s=612x612&w=0&k=20&c=Ctt2bw9V05sMx0iOmlhbgXiGQxRgsBxxxZ3k7UWj7YA=" alt="Logo">
+            <h1>LOPES BARBEARIA</h1>
+        </div>
+        <div class="nav-buttons">
+            <button class="nav-btn active" id="btn-nav-agendamento" onclick="showSection('agendamento')">Agendar</button>
+            <button class="nav-btn" id="btn-nav-cliente" onclick="showSection('cliente')">Meus Agendamentos</button>
+        </div>
+    </header>
+
+    <div id="section-agendamento" class="main-layout">
+        <div class="content-side">
+            <div class="section-title"><span class="section-num">1</span> Escolha o Serviço</div>
+            <div class="services-grid">
+                <div class="service-card" onclick="selectService(this, 'Corte Masculino', 40, 40)">
+                    <h3>Corte de Cabelo</h3>
+                    <p>Corte tradicional com acabamento premium e lavagem.</p>
+                    <div class="service-meta">
+                        <span class="service-time">⏱ 40 MIN</span>
+                        <span class="service-price">R$ 40</span>
+                    </div>
+                </div>
+                <div class="service-card" onclick="selectService(this, 'Barba Completa', 40, 40)">
+                    <h3>Barba</h3>
+                    <p>Design de barba com toalha quente e terapia de óleos.</p>
+                    <div class="service-meta">
+                        <span class="service-time">⏱ 40 MIN</span>
+                        <span class="service-price">R$ 40</span>
+                    </div>
+                </div>
+                <div class="service-card" onclick="selectService(this, 'Combo Corte + Barba', 80, 75)">
+                    <h3>Combo Cabelo e Barba</h3>
+                    <p>O pacote completo para o cavalheiro moderno.</p>
+                    <div class="service-meta">
+                        <span class="service-time">⏱ 80 MIN</span>
+                        <span class="service-price">R$ 75</span>
+                    </div>
+                </div>
+                <div class="service-card" onclick="selectService(this, 'Corte Infantil', 40, 40)">
+                    <h3>Corte Infantil</h3>
+                    <p>Atendimento humanizado e paciente para crianças.</p>
+                    <div class="service-meta">
+                        <span class="service-time">⏱ 40 MIN</span>
+                        <span class="service-price">R$ 40</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dateTimeArea" style="opacity: 0.3; pointer-events: none; transition: 0.5s;">
+                <div class="section-title"><span class="section-num">2</span> Data & Horário</div>
+                <div class="date-picker-wrapper">
+                    <input type="date" id="dataAgendamento" class="date-picker">
+                </div>
+                <div id="gridHorarios" class="horarios-grid"></div>
+            </div>
+        </div>
+
+        <div class="summary-side">
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span class="summary-label">Serviço</span>
+                    <span class="summary-value" id="resumoServico">---</span>
+                </div>
+
+                <div id="autismo-area" style="display:none; margin-bottom:12px;">
+                    <span class="summary-label">Atendimento especializado?</span>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button class="time-btn" style="flex:1" onclick="setAutismo(true)">Sim (Autismo)</button>
+                        <button class="time-btn" style="flex:1" onclick="setAutismo(false)">Não</button>
+                    </div>
+                </div>
+
+                <div class="summary-row">
+                    <span class="summary-label">Data e Hora</span>
+                    <span class="summary-value" id="resumoDataHora">---</span>
+                </div>
+                
+                <div id="observations-area" style="display:none; margin-bottom: 12px;">
+                    <span class="summary-label">Observações / Preferências sensoriais</span>
+                    <textarea id="observations" placeholder="Ex: Prefere atenção calma, sem barulho" style="width:100%; height:70px; margin-top:8px; padding:8px; background:#000; color:#fff; border:1px solid var(--border); border-radius:6px; font-family: sans-serif;"></textarea>
+                </div>
+
+                <div class="summary-row" style="margin-bottom:12px;">
+                    <span class="summary-label">Barbeiro</span>
+                    <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
+                        <img id="barberPhoto" src="https://i.pravatar.cc/120?img=3" alt="Barbeiro" style="width:64px; height:64px; border-radius:8px; object-fit:cover; border:1px solid var(--border)">
+                        <select id="selectBarbeiro" style="flex:1; background:#000; border:1px solid var(--border); color:#fff; padding:10px; border-radius:6px;">
+                            <option value="Barbeiro 1">Barbeiro 1</option>
+                            <option value="Barbeiro 2">Barbeiro 2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <span class="summary-label">Total a pagar</span>
+                <span class="total-price" id="resumoPreco">
+                    R$ 0 <span id="resumoTempo" style="font-size:0.8rem; color:var(--text-muted); font-weight:500;"></span>
+                </span>
+                
+                <div id="userNameLogged" style="margin-bottom: 15px; font-size: 0.8rem; color: var(--primary); font-weight: 600;"></div>
+                
+                <button id="btnConfirmar" class="btn-confirm" disabled onclick="finalizarAgendamento()">
+                    CONFIRMAR AGENDAMENTO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-cliente" class="auth-container">
+        <div id="auth-login">
+            <h2 style="text-align: center;">Acessar</h2>
+            <input type="text" id="login-email" placeholder="E-mail ou telefone">
+            <input type="password" id="login-senha" placeholder="Senha">
+            <button class="nav-btn active" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Entrar</button>
+            <span class="toggle-auth" onclick="toggleAuthMode('signup')">Ainda não tem conta? Criar conta</span>
+        </div>
+
+        <div id="auth-signup" style="display: none;">
+            <h2 style="text-align: center;">Nova Conta</h2>
+            <input type="text" id="signup-nome" placeholder="Nome Completo *" required>
+            <input type="text" id="signup-phone" placeholder="Telefone (DDD + Número) *" required>
+            <input type="email" id="signup-email" placeholder="E-mail *" required>
+            <input type="password" id="signup-senha" placeholder="Senha (mín. 6 dígitos) *" required>
+            <button class="nav-btn active" style="width: 100%; margin-top: 10px;" onclick="handleSignUp()">Cadastrar</button>
+            <span class="toggle-auth" onclick="toggleAuthMode('login')">Já tem conta? Entrar</span>
+        </div>
+
+        <div id="user-logged-info" style="display: none; text-align: center;">
+            <p>Olá, <span id="clientName" style="color: var(--primary); font-weight: 700;"></span>!</p>
+            <button class="nav-btn" onclick="handleLogout()">Sair da conta</button>
+            <hr border-color="#222" style="margin: 20px 0;">
+            <h3 style="font-size: 0.9rem;">Meus Agendamentos</h3>
+            <div id="listaAgendamentos" style="font-size: 0.8rem; text-align: left;"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>📍 Av. Central, 149-21 - Alto Lagoa Funda, Marataízes - ES, 29345-000</p>
+        <a href="https://maps.google.com" target="_blank" class="map-link">
+            🗺️ VER NO GOOGLE MAPS
+        </a>
+        <p style="margin-top: 20px; opacity: 0.5;">© 2025 LOPES BARBEARIA</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, getDoc, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyCInLdLMFOT7swPnMWtUH0z5o73RkwahCQ",
+  authDomain: "bradock-c664e.firebaseapp.com",
+  projectId: "bradock-c664e",   
+  storageBucket: "bradock-c664e.firebasestorage.app",
+  messagingSenderId: "140609259960",
+  appId: "1:140609259960:web:c7706bc37061c97ea8674d",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const inputData = document.getElementById('dataAgendamento');
+        
+        const getTodayStr = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const hojeISO = getTodayStr();
+        inputData.setAttribute('min', hojeISO);
+
+        let state = { servico: null, data: null, hora: null, user: null, autismo: false, barbeiro: 'Barbeiro 1' };
+        const horariosBase = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:00", "13:40", "14:20", "15:00", "15:40", "16:20", "17:00", "17:40", "18:20"];
+
+        // FUNÇÃO AJUSTADA APENAS PARA EXIBIR BLOCK NO MOBILE
+        window.showSection = (name) => {
+            document.getElementById('section-agendamento').style.display = name === 'agendamento' ? 'grid' : 'none';
+            document.getElementById('section-cliente').style.display = name === 'cliente' ? 'block' : 'none';
+            document.getElementById('btn-nav-agendamento').classList.toggle('active', name === 'agendamento');
+            document.getElementById('btn-nav-cliente').classList.toggle('active', name === 'cliente');
+            window.scrollTo(0, 0); // Garante que a tela comece do topo ao trocar
+        };
+
+        window.toggleAuthMode = (mode) => {
+            document.getElementById('auth-login').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('auth-signup').style.display = mode === 'signup' ? 'block' : 'none';
+        };
+
+        window.selectService = (el, nome, duracao, preco) => {
+            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            const slots = Math.max(1, Math.ceil(duracao / 40));
+            // armazenar valores originais para restaurar caso o toggle Autismo seja desmarcado
+            state.servico = { nome, duracao, preco, slots, original: { duracao, preco, slots } };
+            state.autismo = false;
+            state.hora = null;
+
+            document.getElementById('resumoServico').innerText = `${nome}${slots > 1 ? ' (' + slots + ' slots)' : ''}`;
+            document.getElementById('resumoPreco').innerHTML = `R$ ${preco} <span id="resumoTempo" style="font-size:0.8rem; color:var(--text-muted); font-weight:500;"> • ⏱ ${duracao} min </span>`;
+            
+            document.getElementById('dateTimeArea').style.opacity = "1";
+            document.getElementById('dateTimeArea').style.pointerEvents = "all";
+
+            if(nome === 'Corte Infantil') {
+                document.getElementById('autismo-area').style.display = 'block';
+                document.getElementById('observations-area').style.display = 'none';
+            } else {
+                document.getElementById('autismo-area').style.display = 'none';
+                document.getElementById('observations-area').style.display = 'none';
+            }
+            
+            if (state.data) renderHorarios();
+            updateUI();
+        };
+
+        window.setAutismo = (val) => {
+            state.autismo = val;
+            if (!state.servico) return;
+
+            if (val) {
+                // Autismo demanda 2 slots; preço R$60 só para Corte Infantil
+                state.servico.slots = 2;
+                state.servico.duracao = 2 * 40;
+                if (state.servico.nome && state.servico.nome.includes('Infantil')) state.servico.preco = 60;
+            } else {
+                // restaurar valores originais
+                if (state.servico.original) {
+                    state.servico.duracao = state.servico.original.duracao;
+                    state.servico.preco = state.servico.original.preco;
+                    state.servico.slots = state.servico.original.slots;
+                } else {
+                    state.servico.duracao = 40; state.servico.preco = 40; state.servico.slots = 1;
+                }
+            }
+
+            document.getElementById('resumoPreco').innerHTML = `R$ ${state.servico.preco} <span id="resumoTempo" style="font-size:0.8rem; color:var(--text-muted); font-weight:500;"> • ⏱ ${state.servico.duracao} min </span>`;
+
+            document.querySelectorAll('#autismo-area .time-btn').forEach(b => b.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('observations-area').style.display = 'block';
+
+            if (state.data) renderHorarios();
+            updateUI();
+        };
+
+        inputData.addEventListener('change', (e) => {
+            const selectedDate = e.target.value;
+            const today = getTodayStr();
+
+            if (selectedDate && selectedDate < today) {
+                alert("Não é possível agendar em datas passadas.");
+                e.target.value = "";
+                state.data = null;
+                state.hora = null;
+                document.getElementById('resumoDataHora').innerText = "---";
+                document.getElementById('gridHorarios').innerHTML = "";
+                updateUI();
+                return;
+            }
+
+            state.data = selectedDate;
+            state.hora = null;
+            document.getElementById('resumoDataHora').innerText = "---";
+            renderHorarios();
+            updateUI();
+        });
+
+        async function renderHorarios() {
+            const grid = document.getElementById('gridHorarios');
+            if(!state.data) return;
+            
+            const dataSelecionada = new Date(state.data + 'T00:00:00');
+
+            // Verifica configurações específicas do dia no Firestore (config_dias)
+            const configRef = doc(db, "config_dias", state.data);
+            const configSnap = await getDoc(configRef);
+
+            // Fechamento padrão: domingos fechados por padrão, a menos que exista doc com status 'open'
+            const isSunday = dataSelecionada.getDay() === 0;
+            if ((configSnap.exists() && configSnap.data().status === 'closed') || (isSunday && (!configSnap.exists() || configSnap.data().status !== 'open'))) {
+                grid.innerHTML = "<p style='color: #ff4d4d; grid-column: 1/-1;'>Dia fechado para agendamentos.</p>";
+                return;
+            }
+
+            grid.innerHTML = "Carregando...";
+            try {
+                // Consulta todos os agendamentos do dia (faremos a filtragem local por compatibilidade)
+                const q = query(collection(db, "agendamentos"), where("data", "==", state.data));
+                const snap = await getDocs(q);
+                const occupiedSet = new Set();
+                snap.docs.forEach(d => {
+                    const data = d.data() || {};
+                    // Normaliza campo barbeiro (compatibilidade com valores antigos ou sem campo)
+                    const rawBarb = (data.barbeiro || 'Barbeiro 1').toString();
+                    const normalizedBarb = (rawBarb.toLowerCase().includes('2') || rawBarb.toLowerCase().includes('barbeiro 2')) ? 'Barbeiro 2' : 'Barbeiro 1';
+                    if (normalizedBarb !== state.barbeiro) return; // ignora agendamentos de outro barbeiro
+
+                    const hora = (data.hora || '').toString();
+                    const idx = horariosBase.indexOf(hora);
+                    if (idx < 0) return; // horário inválido ou não mapeado
+
+                    const slotsCount = Number(data.slots) || 1;
+                    for (let s = 0; s < slotsCount; s++) {
+                        const t = horariosBase[idx + s];
+                        if (t) occupiedSet.add(t);
+                    }
+                });
+
+                grid.innerHTML = "";
+                const agora = new Date();
+                const dataHojeStr = getTodayStr();
+
+                horariosBase.forEach((h, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'time-btn';
+                    btn.innerText = h;
+                    
+                    const [hH, hM] = h.split(':').map(Number);
+                    
+                    let isPast = false;
+                    if (state.data === dataHojeStr) {
+                        const horaLimite = new Date();
+                        horaLimite.setHours(hH, hM, 0, 0);
+                        if (agora > horaLimite) isPast = true;
+                    }
+
+                    let canFit = true;
+                    for(let i=0; i < (state.servico?.slots || 1); i++){
+                        const targetTime = horariosBase[index + i];
+                        if(!targetTime || occupiedSet.has(targetTime)) { canFit = false; break; }
+                    }
+
+                    if (isPast || !canFit) {
+                        btn.classList.add('blocked');
+                        btn.disabled = true;
+                    } else {
+                        if (state.hora === h) btn.classList.add('selected');
+
+                        btn.onclick = () => {
+                            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+                            btn.classList.add('selected');
+                            state.hora = h;
+                            document.getElementById('resumoDataHora').innerText = `${state.data.split('-').reverse().join('/')} às ${h}h`;
+                            updateUI();
+                        };
+                    }
+                    grid.appendChild(btn);
+                });
+            } catch (e) { console.error('renderHorarios error:', e); grid.innerHTML = "Erro ao carregar. Tente atualizar a página."; }
+        }
+
+        // Inicializar seletor de barbeiro e reagir à troca
+        const selBar = document.getElementById('selectBarbeiro');
+        const barberPhoto = document.getElementById('barberPhoto');
+        const BARBER_IMAGES = { 'Barbeiro 1': 'https://i.pravatar.cc/120?img=3', 'Barbeiro 2': 'https://i.pravatar.cc/120?img=5' };
+        if (selBar) {
+            selBar.value = state.barbeiro || 'Barbeiro 1';
+            if (barberPhoto) barberPhoto.src = BARBER_IMAGES[selBar.value] || barberPhoto.src;
+            selBar.addEventListener('change', (e) => {
+                state.barbeiro = e.target.value;
+                if (barberPhoto) barberPhoto.src = BARBER_IMAGES[state.barbeiro] || barberPhoto.src;
+                if (state.data) renderHorarios();
+            });
+        }
+
+        window.handleSignUp = async () => {
+            const nome = document.getElementById('signup-nome').value.trim();
+            const phoneRaw = document.getElementById('signup-phone').value;
+            const emailInput = document.getElementById('signup-email').value.trim();
+            const senha = document.getElementById('signup-senha').value;
+            const phoneClean = phoneRaw.replace(/\D/g, '');
+
+            if (!nome || phoneClean.length < 10 || !emailInput.includes('@') || senha.length < 6) {
+                alert("Verifique os campos obrigatórios."); return;
+            }
+
+            try {
+                const res = await createUserWithEmailAndPassword(auth, emailInput, senha);
+                await updateProfile(res.user, { displayName: nome });
+                await setDoc(doc(db, 'users', res.user.uid), {
+                    nome: nome, email: emailInput, phone: phoneClean, createdAt: new Date()
+                });
+                alert("Conta criada!");
+            } catch (e) { alert("Erro: " + e.message); }
+        };
+
+        window.handleLogin = async () => {
+            const iden = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            try {
+                if (iden.includes('@')) {
+                    await signInWithEmailAndPassword(auth, iden, senha);
+                } else {
+                    const clean = iden.replace(/\D/g,'');
+                    const q = query(collection(db, 'users'), where('phone', '==', clean));
+                    const snap = await getDocs(q);
+                    if (snap.empty) throw new Error('Usuário não encontrado');
+                    await signInWithEmailAndPassword(auth, snap.docs[0].data().email, senha);
+                }
+            } catch (e) { alert("Erro: " + e.message); }
+        };
+
+        window.handleLogout = () => signOut(auth);
+
+        onAuthStateChanged(auth, async (user) => {
+            state.user = user;
+            if (user) {
+                let nomeExibicao = user.displayName || user.email;
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists() && userDoc.data().nome) nomeExibicao = userDoc.data().nome;
+                } catch (e) {}
+
+                document.getElementById('user-logged-info').style.display = "block";
+                document.getElementById('auth-login').style.display = "none";
+                document.getElementById('auth-signup').style.display = "none";
+                document.getElementById('clientName').innerText = nomeExibicao;
+                document.getElementById('userNameLogged').innerText = `Agendando para: ${nomeExibicao}`;
+                loadUserAppointments(user.uid);
+            } else {
+                document.getElementById('user-logged-info').style.display = "none";
+                document.getElementById('auth-login').style.display = "block";
+                document.getElementById('userNameLogged').innerText = "";
+            }
+            updateUI();
+        });
+
+        window.finalizarAgendamento = async () => {
+            if (!state.user) { showSection('cliente'); return; }
+
+            const hoje = getTodayStr();
+            const agora = new Date();
+            const [selH, selM] = state.hora.split(':').map(Number);
+            const dataHoraSelecionada = new Date(state.data + 'T00:00:00');
+            dataHoraSelecionada.setHours(selH, selM, 0, 0);
+
+            if (state.data < hoje || (state.data === hoje && agora > dataHoraSelecionada)) {
+                alert("O horário selecionado já passou. Por favor, escolha outro horário.");
+                renderHorarios();
+                return;
+            }
+
+            // Segurança: verifica se o dia não foi fechado pelo admin antes de salvar
+            const confRef = doc(db, "config_dias", state.data);
+            const confSnap = await getDoc(confRef);
+            const dataSelecionadaConf = new Date(state.data + 'T00:00:00');
+            const isSundayConf = dataSelecionadaConf.getDay() === 0;
+            if ((confSnap.exists() && confSnap.data().status === 'closed') || (isSundayConf && (!confSnap.exists() || confSnap.data().status !== 'open'))) {
+                alert("Não é possível agendar para esta data: dia fechado pelo administrador.");
+                renderHorarios();
+                return;
+            }
+
+            const btn = document.getElementById('btnConfirmar');
+            btn.innerText = "SALVANDO..."; btn.disabled = true;
+            
+            try {
+                const uDoc = await getDoc(doc(db, 'users', state.user.uid));
+                const userData = uDoc.data();
+                const nomeCliente = userData?.nome || state.user.displayName || "Cliente";
+
+                // Lógica alinhada com o admin
+                const slotsNeeded = state.autismo ? 2 : state.servico.slots;
+                let precoFinal = Number(state.servico.preco) || 0;
+                let servicoFinal = state.servico.nome;
+                if (state.autismo) {
+                    servicoFinal += ' (Autismo)';
+                    if (state.servico.nome && state.servico.nome.includes('Infantil')) precoFinal = 60;
+                }
+
+                // Se precisar de 2 slots, verificar disponibilidade do próximo horário
+                if (slotsNeeded > 1) {
+                    const index = horariosBase.indexOf(state.hora);
+                    const nextTime = horariosBase[index + 1];
+                    if (!nextTime) { alert("Não há horário seguinte disponível."); btn.innerText = "CONFIRMAR AGENDAMENTO"; btn.disabled = false; return; }
+
+                    const q = query(collection(db, "agendamentos"), where("data", "==", state.data), where("barbeiro", "==", state.barbeiro));
+                    const snap = await getDocs(q);
+                    const occupied = [];
+                    snap.forEach(d => {
+                        const data = d.data();
+                        const idx = horariosBase.indexOf(data.hora);
+                        for (let s = 0; s < (data.slots || 1); s++) {
+                            if (horariosBase[idx + s]) occupied.push(horariosBase[idx + s]);
+                        }
+                    });
+                    if (occupied.includes(nextTime)) { alert("O próximo horário está ocupado."); btn.innerText = "CONFIRMAR AGENDAMENTO"; btn.disabled = false; return; }
+                }
+
+                await addDoc(collection(db, "agendamentos"), {
+                    userId: state.user.uid,
+                    nome: nomeCliente,
+                    cliente: nomeCliente,
+                    telefone: userData?.phone || '',
+                    servico: servicoFinal,
+                    data: state.data,
+                    hora: state.hora,
+                    slots: slotsNeeded,
+                    preco: precoFinal,
+                    autismo: state.autismo,
+                    observacoes: document.getElementById('observations').value,
+                    barbeiro: state.barbeiro,
+                    status: 'confirmed',
+                    timestamp: new Date()
+                });
+
+                const msg = encodeURIComponent(`💈 *LOPES BARBEARIA*\n\n👤 Cliente: ${nomeCliente}\n✂️ Serviço: ${servicoFinal}\n📅 Data: ${state.data.split('-').reverse().join('/')}\n⏰ Hora: ${state.hora}h\n💈 Barbeiro: ${state.barbeiro}`);
+                window.open(`https://api.whatsapp.com/send?phone=5528999082741&text=${msg}`);
+                location.reload();
+            } catch (e) { 
+                alert(e.message); btn.innerText = "CONFIRMAR AGENDAMENTO"; btn.disabled = false; 
+            }
+        };
+
+        function updateUI() {
+            const btn = document.getElementById('btnConfirmar');
+            let ready = !!(state.servico && state.data && state.hora);
+            
+            if (state.servico?.nome === 'Corte Infantil') {
+                const autismoBtnSelected = document.querySelector('#autismo-area .time-btn.selected');
+                if (!autismoBtnSelected) ready = false;
+            }
+            
+            btn.disabled = !ready;
+            btn.classList.toggle('ready', !btn.disabled);
+        }
+
+        async function loadUserAppointments(uid) {
+            const q = query(collection(db, "agendamentos"), where("userId", "==", uid));
+            const snap = await getDocs(q);
+            const lista = document.getElementById('listaAgendamentos');
+            lista.innerHTML = snap.empty ? "Nenhum agendamento ativo." : "";
+            snap.forEach(d => {
+                const dt = d.data();
+                // Salvamos os dados em string para usar no cancelamento
+                const dadosAgendamento = JSON.stringify({
+                    servico: dt.servico,
+                    data: dt.data,
+                    hora: dt.hora,
+                    cliente: dt.cliente
+                }).replace(/"/g, '&quot;');
+
+                lista.innerHTML += `<div style="border-bottom: 1px solid #222; padding: 10px 0;">
+                    <b>${dt.servico}</b><br>${dt.data.split('-').reverse().join('/')} às ${dt.hora}h
+                    <br><button style="background:#e53e3e; color:#fff; border:none; padding:4px 8px; border-radius:4px; margin-top:5px; cursor:pointer;" onclick="cancelMyBooking('${d.id}', '${dadosAgendamento}')">CANCELAR</button>
+                </div>`;
+            });
+        }
+
+        window.cancelMyBooking = async (id, dadosRaw) => {
+            const dados = JSON.parse(dadosRaw);
+            
+            // --- TRAVA DE 2 HORAS ---
+            const agora = new Date();
+            const [horaS, minS] = dados.hora.split(':').map(Number);
+            const dataAgendamento = new Date(dados.data + 'T00:00:00');
+            dataAgendamento.setHours(horaS, minS, 0, 0);
+
+            const diferencaMs = dataAgendamento - agora;
+            const diferencaHoras = diferencaMs / (1000 * 60 * 60);
+
+            if (diferencaHoras < 2) {
+                alert("Não é possível cancelar com menos de 2 horas de antecedência. Entre em contato direto com a barbearia.");
+                return;
+            }
+
+            if (!confirm('Deseja realmente cancelar este agendamento?')) return;
+            
+            try {
+                await deleteDoc(doc(db, 'agendamentos', id));
+                
+                // --- MENSAGEM DE CANCELAMENTO VIA WHATSAPP ---
+                const msgCancelamento = encodeURIComponent(
+                    `🚫 *CANCELAMENTO DE AGENDAMENTO*\n\n` +
+                    `👤 Cliente: ${dados.cliente}\n` +
+                    `✂️ Serviço: ${dados.servico}\n` +
+                    `📅 Data: ${dados.data.split('-').reverse().join('/')}\n` +
+                    `⏰ Hora: ${dados.hora}h\n\n`
+                );
+                
+                alert("Agendamento removido. Informando o barbeiro...");
+                window.open(`https://api.whatsapp.com/send?phone=5528999082741&text=${msgCancelamento}`);
+                loadUserAppointments(state.user.uid);
+            } catch (e) {
+                alert("Erro: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>
